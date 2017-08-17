@@ -13,6 +13,7 @@ std::string exec(const char* cmd) {
     std::array<char, 128> buffer;
 	// create result string
     std::string result;
+
 	// use popen to run the passed in command
     std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
 	// throw and error on fail
@@ -26,21 +27,40 @@ std::string exec(const char* cmd) {
 }
 
 int main(int argc, char *argv[]) {
-	// get the first argument and print it for testing
-	std::cout << argv[1] << std::endl;
-	
-	// create a string from the first argument
-	std::string file_name = argv[1];
+	// make strings for scrot and rm commands
+	const std::string scrot_cmd = "scrot -q 100 scrot.png";
+	const std::string rm_cmd = "rm scrot.png";
+
+	// take screenshot
+	exec(scrot_cmd.c_str());
 
 	// create a string for the base command
-	const std::string base_cmd = "curl -F c=@- https://ptpb.pw < ";
-
+	std::string pb_cmd = "curl -F c=@- https://ptpb.pw < ";
 	// combine the command and the file name
-	std::string system_s = base_cmd + file_name;
-	
+	pb_cmd = pb_cmd + "scrot.png";
 	// run the command on the system
 	// also convert it from string to char array so it can be used with system()
-	std::string system_o = exec(system_s.c_str());
+	std::string system_o = exec(pb_cmd.c_str());
 	std::cout << system_o << std::endl;
+
+	// now we can remove the file to clean up
+	exec(rm_cmd.c_str());
+	
+	// now we must strip system_o of all but the url
+	// first part
+	std::size_t found_h = system_o.find("http");
+	system_o.erase(0, found_h);
+	// second part
+	std::size_t found_u = system_o.find("uuid");
+	std::size_t end_length = system_o.length() - found_u;
+	system_o.erase(found_u, end_length);
+	system_o.erase(system_o.length()-1);
+
+	// start firefox with that url
+	std::string firefox_cmd = "firefox ";
+	firefox_cmd = firefox_cmd + system_o;
+	firefox_cmd = firefox_cmd + ".png";
+	
+	exec(firefox_cmd.c_str());
 	return 0;
 }
