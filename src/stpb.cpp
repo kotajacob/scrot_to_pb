@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
 	std::ofstream myfile;
 	myfile.open ("clp");
 	myfile << system_o;
+	myfile << ".png";
 	myfile.close();
 
 	// send it to the clipboard
