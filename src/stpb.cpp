@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -29,10 +30,12 @@ std::string exec(const char* cmd) {
 int main(int argc, char *argv[]) {
 	// make strings for scrot and rm commands
 	const std::string scrot_cmd = "scrot -q 100 scrot.png";
-	const std::string rm_cmd = "rm scrot.png";
+	const std::string xclip_cmd = "xclip -in -selection c clp";
+	const std::string rm_s_cmd = "rm scrot.png";
+	const std::string rm_c_cmd = "rm clp";
 
 	// take screenshot
-	exec(scrot_cmd.c_str());
+	system(scrot_cmd.c_str());
 
 	// create a string for the base command
 	std::string pb_cmd = "curl -F c=@- https://ptpb.pw < ";
@@ -44,7 +47,7 @@ int main(int argc, char *argv[]) {
 	std::cout << system_o << std::endl;
 
 	// now we can remove the file to clean up
-	exec(rm_cmd.c_str());
+	exec(rm_s_cmd.c_str());
 	
 	// now we must strip system_o of all but the url
 	// first part
@@ -56,11 +59,23 @@ int main(int argc, char *argv[]) {
 	system_o.erase(found_u, end_length);
 	system_o.erase(system_o.length()-1);
 
+	// send it to a file
+	std::ofstream myfile;
+	myfile.open ("clp");
+	myfile << system_o;
+	myfile.close();
+
+	// send it to the clipboard
+	system(xclip_cmd.c_str());
+	
+	// now we can remove the file to clean up
+	exec(rm_c_cmd.c_str());
+
 	// start firefox with that url
 	std::string firefox_cmd = "firefox ";
 	firefox_cmd = firefox_cmd + system_o;
 	firefox_cmd = firefox_cmd + ".png";
 	
-	exec(firefox_cmd.c_str());
+	system(firefox_cmd.c_str());
 	return 0;
 }
